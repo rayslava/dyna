@@ -26,7 +26,9 @@
                     (x-amz-date . ,#'request-x-amz-date)))
   (canonical-uri "/")
   (query-string "")
-  (content ""))
+  (content "")
+  ;; Taken once, so the signed and sent dates agree when signing is slow
+  (date (timestamp)))
 
 @export
 (defun request-access-key (request)
@@ -42,8 +44,10 @@
 
 @export
 (defun request-x-amz-date (request)
-  (declare (ignore request))
-  (timestamp))
+  (request-date request))
+
+(defun request-datestamp (request)
+  (subseq (request-date request) 0 8))
 
 @export
 (defun request-content-length (request)
@@ -90,7 +94,7 @@
 @export
 (defun request-credential-scope (request)
   (format nil "~{~a~^/~}"
-          (list (datestamp)
+          (list (request-datestamp request)
                 (request-region request)
                 (request-service request)
                 "aws4_request")))
@@ -99,13 +103,13 @@
 (defun request-signing-string (request)
   (format nil "~{~a~^~%~}"
           (list (request-hash-algorithm request)
-                (timestamp)
+                (request-x-amz-date request)
                 (request-credential-scope request)
                 (request-hashed-canonical-request request))))
 
 @export
 (defun request-signing-key (request)
-  (let* ((k-date (hmac (concatenate 'string "AWS4" (request-secret-key request)) (datestamp)))
+  (let* ((k-date (hmac (concatenate 'string "AWS4" (request-secret-key request)) (request-datestamp request)))
          (k-region (hmac k-date (request-region request)))
          (k-service (hmac k-region (request-service request))))
     (hmac k-service "aws4_request")))
