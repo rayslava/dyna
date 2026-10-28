@@ -70,7 +70,7 @@
             (etypecase s
               (symbol (symbol-name s))
               (string s))))
-    (sort lst #'(lambda (a b)
+    (sort (copy-list lst) #'(lambda (a b)
                   (string< (to-s (car a)) (to-s (car b)))))))
 
 @export

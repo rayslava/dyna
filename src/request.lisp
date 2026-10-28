@@ -56,7 +56,7 @@
 
 @export
 (defun %request-signed-headers (request)
-  (format nil "~(~{~a~^;~}~)" (mapcar #'car (request-signed-headers request))))
+  (format nil "~(~{~a~^;~}~)" (mapcar #'car (sort-alist (request-signed-headers request)))))
 
 @export
 (defun request-canonical-header (request)
